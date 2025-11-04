@@ -4,78 +4,63 @@ from pathlib import Path
 from PIL import Image
 import shutil
 
-# -------------------------- 只改这里！--------------------------
+# -------------------------- 配置参数 --------------------------
 YOLO_DATASET_ROOT = "datasets"  # 你的 YOLO 数据集根目录
+LABEL_STUDIO_EXPORT_JSON = "label_studio_import_fixed.json"  # 新的输出 JSON
 # ---------------------------------------------------------------
 
-OUTPUT_JSON = "label_studio_import.json"
-UPLOAD_IMAGE_DIR = "to_upload/images"  # 整理后供上传的图片文件夹
-
-# 1. 读取类别 + 创建图片上传目录
+# 1. 读取类别文件
 with open(os.path.join(YOLO_DATASET_ROOT, "classes.txt"), "r", encoding="utf-8") as f:
     classes = [line.strip() for line in f if line.strip()]
 id_to_class = {idx: cls for idx, cls in enumerate(classes)}
 
-os.makedirs(UPLOAD_IMAGE_DIR, exist_ok=True)
-os.makedirs(os.path.join(UPLOAD_IMAGE_DIR, "train"), exist_ok=True)
-os.makedirs(os.path.join(UPLOAD_IMAGE_DIR, "val"), exist_ok=True)
-
-# 2. 复制图片到上传目录（保持 train/val 结构）
+# 2. 收集所有图片和标注的映射（不管 train/val 子目录，统一处理）
+image_label_mapping = {}
 for split in ["train", "val"]:
-    src_img_dir = os.path.join(YOLO_DATASET_ROOT, "images", split)
-    dst_img_dir = os.path.join(UPLOAD_IMAGE_DIR, split)
-    for img_file in os.listdir(src_img_dir):
-        if img_file.endswith(('.jpg', '.png', '.jpeg')):
-            shutil.copy(os.path.join(src_img_dir, img_file), dst_img_dir)
-
-# 3. 生成 Label Studio JSON（自动处理坐标转换）
-label_studio_data = []
-for split in ["train", "val"]:
-    img_dir = os.path.join(UPLOAD_IMAGE_DIR, split)
+    img_dir = os.path.join(YOLO_DATASET_ROOT, "images", split)
     label_dir = os.path.join(YOLO_DATASET_ROOT, "labels", split)
-
     for img_filename in os.listdir(img_dir):
-        img_name, img_ext = os.path.splitext(img_filename)
-        img_path = os.path.join(split, img_filename)  # 相对路径
-        img_abs_path = os.path.join(img_dir, img_filename)
+        if img_filename.endswith(('.jpg', '.png', '.jpeg')):
+            img_name = os.path.splitext(img_filename)[0]
+            label_path = os.path.join(label_dir, f"{img_name}.txt")
+            image_label_mapping[img_filename] = label_path
 
-        # 读取图片尺寸
-        with Image.open(img_abs_path) as img:
-            w, h = img.size
-
-        # 解析 YOLO 标注
-        annotations = []
-        label_path = os.path.join(label_dir, f"{img_name}.txt")
-        if os.path.exists(label_path):
-            with open(label_path, "r") as f:
-                for line in f:
-                    parts = line.strip().split()
-                    if len(parts) != 5:
-                        continue
-                    class_id, xc, yc, bw, bh = map(float, parts)
-                    # YOLO → Label Studio 百分比坐标
-                    x1 = (xc - bw/2) * 100
-                    y1 = (yc - bh/2) * 100
-                    width = bw * 100
-                    height = bh * 100
-                    annotations.append({
-                        "result": [{
-                            "value": {"x": x1, "y": y1, "width": width, "height": height, "label": [id_to_class[int(class_id)]]},
-                            "type": "rectanglelabels", "to_name": "image", "from_name": "label"
-                        }]
-                    })
-
-        # 添加到 JSON
-        label_studio_data.append({
-            "data": {"image": f"/data/local-files/?d=images/{img_path}"},
-            "annotations": annotations
-        })
+# 3. 生成 Label Studio JSON（路径改为 Label Studio 实际的 upload 格式）
+label_studio_data = []
+for img_filename, label_path in image_label_mapping.items():
+    # 图片在 Label Studio 中的路径（固定格式）
+    img_ls_path = f"/data/upload/1/{img_filename}"
+    # 读取图片尺寸
+    img_abs_path = os.path.join(YOLO_DATASET_ROOT, "images", "train" if "train" in label_path else "val", img_filename)
+    with Image.open(img_abs_path) as img:
+        w, h = img.size
+    # 解析标注
+    annotations = []
+    if os.path.exists(label_path):
+        with open(label_path, "r") as f:
+            for line in f:
+                parts = line.strip().split()
+                if len(parts) != 5:
+                    continue
+                class_id, xc, yc, bw, bh = map(float, parts)
+                x1 = (xc - bw/2) * 100
+                y1 = (yc - bh/2) * 100
+                width = bw * 100
+                height = bh * 100
+                annotations.append({
+                    "result": [{
+                        "value": {"x": x1, "y": y1, "width": width, "height": height, "label": [id_to_class[int(class_id)]]},
+                        "type": "rectanglelabels", "to_name": "image", "from_name": "label"
+                    }]
+                })
+    # 构造数据
+    label_studio_data.append({
+        "data": {"image": img_ls_path},
+        "annotations": annotations
+    })
 
 # 保存 JSON
-with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
+with open(LABEL_STUDIO_EXPORT_JSON, "w", encoding="utf-8") as f:
     json.dump(label_studio_data, f, indent=2)
 
-print(f"完成！生成：")
-print(f"1. 图片文件夹：{UPLOAD_IMAGE_DIR}（可直接上传）")
-print(f"2. 标注 JSON：{OUTPUT_JSON}（可直接导入）")
-print(f"共处理 {len(label_studio_data)} 张图片")
+print("转换完成！新的 JSON 已生成：", LABEL_STUDIO_EXPORT_JSON)
