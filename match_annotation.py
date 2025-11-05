@@ -1,6 +1,7 @@
 import os
 import json
 from PIL import Image
+from urllib.parse import quote, urlparse, parse_qs, unquote
 
 # -------------------------- 配置 --------------------------
 # 以脚本所在目录为根，默认指向项目内 datasets 数据集目录
@@ -8,8 +9,9 @@ ROOTPATH = os.path.dirname(os.path.abspath(__file__))
 YOLO_DATASET_ROOT = os.path.join(ROOTPATH, "datasets")
 OUTPUT_JSON = "final_import.json"
 
-# 采用本地文件服务 /data/local-files 直接从数据集生成图片列表
-# 要求：启动 Label Studio 前正确设置
+# 采用本地文件服务生成图片列表
+
+# 要求：启动 Label Studio 前正确设置（如果使用本地文件服务）
 #   LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true
 #   LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=<项目 datasets 目录>
 # ----------------------------------------------------------
@@ -34,8 +36,7 @@ for split in ["train", "val"]:
 
 """
 2. 生成 Label Studio 任务列表（使用本地文件服务）
-生成路径示例：/data/local-files/?d=images/train/<filename>
-要求 Label Studio 以 datasets 为 DOCUMENT_ROOT 启动。
+生成路径示例：/data/local-files/?d=label-studio/data/images/<split>/<filename>
 """
 ls_tasks = []
 for split in ("train", "val"):
@@ -46,14 +47,30 @@ for split in ("train", "val"):
     for fname in os.listdir(img_dir):
         if not fname.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
             continue
-        rel_path = f"images/{split}/{fname}"
-        ls_tasks.append({"data": {"image": f"/data/local-files/?d={rel_path}"}})
+        # 生成 d 参数中的相对路径：label-studio/data/images/<split>/<filename>
+        rel_path = f"label-studio/data/images/{split}/{fname}"
+        # 统一使用正斜杠并进行 URL 编码，避免空格、中文等字符造成加载失败，保留斜杠不编码
+        rel_path_enc = quote(rel_path.replace("\\", "/"), safe="/")
+        # 生成目标地址：/data/local-files/?d=label-studio/data/images/<split>/<filename>
+        ls_tasks.append({"data": {"image": f"/data/local-files/?d={rel_path_enc}"}})
 
 # 3. 匹配标注并生成最终JSON
 final_data = []
 for task in ls_tasks:
     ls_img_path = task["data"]["image"]
-    original_img_name = os.path.basename(ls_img_path)
+    # 兼容两种地址格式：
+    # - /data/local-files/?d=label-studio/data/images/<split>/<filename>
+    # - /label-studio/data/images/<split>/<filename>
+    parsed = urlparse(ls_img_path)
+    qs = parsed.query
+    rel_path_in_url = parse_qs(qs).get("d", [""])[0]
+    if rel_path_in_url:
+        # 旧格式：取 d 参数
+        original_img_name = unquote(os.path.basename(rel_path_in_url))
+    else:
+        # 新格式：从路径中直接取 basename
+        path_decoded = unquote(parsed.path)
+        original_img_name = os.path.basename(path_decoded)
     if original_img_name.lower() not in yolo_label_map:
         final_data.append({
             "data": {"image": ls_img_path},

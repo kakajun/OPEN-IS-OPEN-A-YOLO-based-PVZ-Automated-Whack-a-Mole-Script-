@@ -1,7 +1,7 @@
 [
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/160 copy 2.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/160%20copy%202.jpg"
     },
     "annotations": [
       {
@@ -386,7 +386,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/160 copy.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/160%20copy.jpg"
     },
     "annotations": [
       {
@@ -771,7 +771,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/160.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/160.jpg"
     },
     "annotations": [
       {
@@ -1156,7 +1156,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/200 copy 2.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/200%20copy%202.jpg"
     },
     "annotations": [
       {
@@ -1559,7 +1559,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/200 copy.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/200%20copy.jpg"
     },
     "annotations": [
       {
@@ -1962,7 +1962,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/200.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/200.jpg"
     },
     "annotations": [
       {
@@ -2365,7 +2365,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/280 copy 2.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/280%20copy%202.jpg"
     },
     "annotations": [
       {
@@ -2714,7 +2714,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/280 copy.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/280%20copy.jpg"
     },
     "annotations": [
       {
@@ -3063,7 +3063,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/280.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/280.jpg"
     },
     "annotations": [
       {
@@ -3412,7 +3412,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/320 copy 2.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/320%20copy%202.jpg"
     },
     "annotations": [
       {
@@ -3743,7 +3743,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/320 copy.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/320%20copy.jpg"
     },
     "annotations": [
       {
@@ -4074,7 +4074,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/320.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/320.jpg"
     },
     "annotations": [
       {
@@ -4405,7 +4405,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/400 copy 2.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/400%20copy%202.jpg"
     },
     "annotations": [
       {
@@ -4754,7 +4754,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/400 copy.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/400%20copy.jpg"
     },
     "annotations": [
       {
@@ -5103,7 +5103,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/400.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/400.jpg"
     },
     "annotations": [
       {
@@ -5452,7 +5452,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/440 copy 2.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/440%20copy%202.jpg"
     },
     "annotations": [
       {
@@ -5837,7 +5837,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/440 copy.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/440%20copy.jpg"
     },
     "annotations": [
       {
@@ -6222,7 +6222,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/440.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/440.jpg"
     },
     "annotations": [
       {
@@ -6607,7 +6607,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/520 copy 2.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/520%20copy%202.jpg"
     },
     "annotations": [
       {
@@ -7082,7 +7082,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/520 copy.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/520%20copy.jpg"
     },
     "annotations": [
       {
@@ -7557,7 +7557,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/520.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/520.jpg"
     },
     "annotations": [
       {
@@ -8032,7 +8032,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/560 copy 2.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/560%20copy%202.jpg"
     },
     "annotations": [
       {
@@ -8453,7 +8453,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/560 copy.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/560%20copy.jpg"
     },
     "annotations": [
       {
@@ -8874,7 +8874,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/560.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/560.jpg"
     },
     "annotations": [
       {
@@ -9295,7 +9295,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/640 copy 2.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/640%20copy%202.jpg"
     },
     "annotations": [
       {
@@ -9667,7 +9667,7 @@
               "width": 7.9384,
               "height": 19.5122,
               "label": [
-                "Strayberry"
+                "Strawberry"
               ]
             },
             "type": "rectanglelabels",
@@ -9680,7 +9680,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/640 copy.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/640%20copy.jpg"
     },
     "annotations": [
       {
@@ -10052,7 +10052,7 @@
               "width": 7.9384,
               "height": 19.5122,
               "label": [
-                "Strayberry"
+                "Strawberry"
               ]
             },
             "type": "rectanglelabels",
@@ -10065,7 +10065,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/640.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/640.jpg"
     },
     "annotations": [
       {
@@ -10437,7 +10437,7 @@
               "width": 7.9384,
               "height": 19.5122,
               "label": [
-                "Strayberry"
+                "Strawberry"
               ]
             },
             "type": "rectanglelabels",
@@ -10450,7 +10450,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/680 copy 2.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/680%20copy%202.jpg"
     },
     "annotations": [
       {
@@ -10462,7 +10462,7 @@
               "width": 9.4787,
               "height": 19.2683,
               "label": [
-                "Strayberry"
+                "Strawberry"
               ]
             },
             "type": "rectanglelabels",
@@ -10475,7 +10475,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/680 copy.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/680%20copy.jpg"
     },
     "annotations": [
       {
@@ -10487,7 +10487,7 @@
               "width": 9.4787,
               "height": 19.2683,
               "label": [
-                "Strayberry"
+                "Strawberry"
               ]
             },
             "type": "rectanglelabels",
@@ -10500,7 +10500,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/680.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/680.jpg"
     },
     "annotations": [
       {
@@ -10512,7 +10512,7 @@
               "width": 9.4787,
               "height": 19.2683,
               "label": [
-                "Strayberry"
+                "Strawberry"
               ]
             },
             "type": "rectanglelabels",
@@ -10525,7 +10525,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/80 copy 2.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/80%20copy%202.jpg"
     },
     "annotations": [
       {
@@ -10892,7 +10892,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/80 copy.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/80%20copy.jpg"
     },
     "annotations": [
       {
@@ -11259,7 +11259,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/train/80.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/train/80.jpg"
     },
     "annotations": [
       {
@@ -11626,7 +11626,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/val/120.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/val/120.jpg"
     },
     "annotations": [
       {
@@ -11993,7 +11993,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/val/240.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/val/240.jpg"
     },
     "annotations": [
       {
@@ -12360,7 +12360,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/val/360.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/val/360.jpg"
     },
     "annotations": [
       {
@@ -12673,7 +12673,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/val/480.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/val/480.jpg"
     },
     "annotations": [
       {
@@ -13130,7 +13130,7 @@
   },
   {
     "data": {
-      "image": "/data/local-files/?d=images/val/600.jpg"
+      "image": "/data/local-files/?d=label-studio/data/images/val/600.jpg"
     },
     "annotations": [
       {

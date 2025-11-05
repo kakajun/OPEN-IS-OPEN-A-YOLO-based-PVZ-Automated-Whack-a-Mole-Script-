@@ -1,0 +1,10 @@
+<View>
+  <Image name="image" value="$image"/>
+  <RectangleLabels name="label" toName="image">
+    <Label value="Sunflower" alias="向日葵" background="#f8d769ff"/>
+    <Label value="Pea" alias="豌豆" background="#81C784"/>
+    <Label value="Zombie" alias="僵尸" background="#E57373"/>
+    <Label value="Strawberry" alias="草莓" background="#FF8A65"/>
+    <Label value="Sunshine" alias="阳光" background="#f5c505ff"/>
+  </RectangleLabels>
+</View>
