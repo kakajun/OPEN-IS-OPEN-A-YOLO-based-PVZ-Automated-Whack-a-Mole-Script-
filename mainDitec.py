@@ -13,59 +13,82 @@
 """
 
 from ultralytics import YOLO
-import pyautogui as auto
 import pygetwindow
 import numpy as np
 import time
 import os
-from PIL import ImageGrab
+from PIL import ImageGrab, Image, ImageDraw, ImageFont
 import cv2
 import sys
 from utils import bossKeyboard
 
 ROOTPATH = os.path.dirname(os.path.abspath(__file__))  # main.py所在目录
-MODEL = os.path.join(ROOTPATH, "models", "1zombie_yolo11n.pt")  # 模型路径
+MODEL = os.path.join(
+    ROOTPATH, "runs", "ZVP_5cls_yolo11s", "weights", "best.pt"
+)  # 使用训练好的 best.pt 模型
 WINDOWS_TITLE = "植物大战僵尸中文版"  # 窗口标题
-ZOMBIE_SIZE = (0.06, 0.1)  # 僵尸的尺寸，宽度和高度占屏幕的比例
-MONEY = [10, 50, 100]  # 金币的值
 PROGRAM_RUNNING_FLAG = bossKeyboard.bossKeyboard(["q"])  # 全局变量，控制主程序的状态
 IS_DRAW = True  # 是否绘画矩形框和展示图像
 
+# 查找可用的中文字体（Windows 常见字体）
+def _get_cn_font_path():
+    candidates = [
+        r"C:\\Windows\\Fonts\\msyh.ttc",   # 微软雅黑
+        r"C:\\Windows\\Fonts\\simhei.ttf", # 黑体
+        r"C:\\Windows\\Fonts\\simsun.ttc", # 宋体
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            return p
+    return None
 
-def dropFakeZombie(_x, _y, _wx, _wy) -> bool:
-    """判断是否是识别错误的僵尸"""
-    return _x < _wx * ZOMBIE_SIZE[0] or _y < _wy * ZOMBIE_SIZE[1]
+CN_FONT_PATH = _get_cn_font_path()
+
+def draw_texts_cn(img, items, color=(0, 255, 0), font_size=20):
+    """在图像上批量绘制中文文本。
+    items: [{"text": str, "x": int, "y": int}]
+    返回绘制后的 BGR 图像
+    """
+    if not items:
+        return img
+    if CN_FONT_PATH is None:
+        # 未找到中文字体，跳过中文绘制，避免出现问号
+        return img
+    try:
+        pil_img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        draw = ImageDraw.Draw(pil_img)
+        font = ImageFont.truetype(CN_FONT_PATH, font_size)
+        # 将 BGR 转为 RGB 的颜色
+        rgb_color = (int(color[2]), int(color[1]), int(color[0]))
+        for item in items:
+            draw.text((item["x"], item["y"]), item["text"], font=font, fill=rgb_color)
+        return cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+    except Exception:
+        # 避免因字体加载异常影响运行
+        return img
 
 
-def clickIt(locations, _window, img, label_map=None, clickTimes=1, clickNum=2):
-    """点击指定位置"""
-    for i in range(len(locations) if len(locations) < clickNum else clickNum):
+def drawDetections(locations, _window, img, label_map=None, max_draw=9999):
+    """绘制检测框与标签（仅显示，不排序、不点击）"""
+    for i in range(min(len(locations), max_draw)):
         # 支持 [x, y, w, h] 或 [x, y, w, h, cls_idx]
         x, y, w, h = locations[i][:4]
         cls_idx = locations[i][4] if len(locations[i]) > 4 else None
-        for i in range(clickTimes):
-            auto.click(x + _window.left, y + _window.top)
         if IS_DRAW:
             # 中心坐标转换为左上角坐标
             x, y, w, h = x - w // 2, y - h // 2, w, h
             cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            # 叠加中文标签
+            # 叠加标签（中文或英文），使用 PIL 中文字体避免问号
             if label_map is not None and cls_idx is not None:
-                label_cn = label_map.get(cls_idx)
-                if label_cn:
-                    cv2.putText(
+                label_text = label_map.get(cls_idx)
+                if label_text:
+                    img = draw_texts_cn(
                         img,
-                        label_cn,
-                        (x, max(0, y - 5)),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.6,
-                        (0, 255, 0),
-                        2,
-                        cv2.LINE_AA,
+                        [{"text": label_text, "x": x, "y": max(0, y - 20)}],
+                        color=(0, 255, 0),
+                        font_size=20,
                     )
-    if IS_DRAW:
-        return img
-    return
+    return img if IS_DRAW else None
 
 
 def main():
@@ -107,10 +130,7 @@ def main():
     print(
         f"Root path: {ROOTPATH}, Model path: {MODEL}, Classes: {classes}, Windows title: {WINDOWS_TITLE}"
     )
-    coinCounter = 0
-    diamandCounter = 0
-    goldCounter = 0
-    silverCounter = 0
+    # 仅检测与显示，不做点击与计数
 
     print("主程序正在运行，按下 'q' 键退出...")
     while PROGRAM_RUNNING_FLAG.program_running:
@@ -122,14 +142,7 @@ def main():
             wx, wy = shot.shape[1], shot.shape[0]
             # print(f"wx: {wx}, wy: {wy}")
 
-            # 遮挡不需要的区域，在指定区域绘画矩形
-            shot = cv2.rectangle(
-                shot, (0, 0), (int(wx * 0.7), int(wy * 0.17)), (0, 0, 0), -1
-            )
-            shot = cv2.rectangle(shot, (0, int(wy * 0.95)), (wx, wy), (0, 0, 0), -1)
-            shot = cv2.rectangle(
-                shot, (0, int(wy * 0.85)), (int(wx * 0.1), wy), (0, 0, 0), -1
-            )
+            # 保留全屏内容进行检测，不做遮挡，以便检测所有目标
 
             shotDet = cv2.resize(shot, (640, 640))
 
@@ -146,53 +159,27 @@ def main():
                 for i in range(len(resultsXYandCLS))
             ]
             # print(resultsXYandCLS)
-            zombies = []
-            coins = []
-            suns = []
+            detections = []
 
             for i in range(len(resultsXYandCLS)):
                 x, y, w, h = resultsXYandCLS[i][:4]
 
                 # 分辨率转换
                 x, y, w, h = x * wx // 640, y * wy // 640, w * wx // 640, h * wy // 640
-                if resultsXYandCLS[i][4] == 0:
-                    # print(f"Zombie: {w/wx} and {h/wy}")
-                    if not dropFakeZombie(w, h, wx, wy):
-                        zombies.append([x, y, w, h, resultsXYandCLS[i][4]])
+                # 收集所有检测用于绘制（不区分类别和点击）
+                detections.append([x, y, w, h, resultsXYandCLS[i][4]])
 
-                if resultsXYandCLS[i][4] == 1:
-                    suns.append([x, y, w, h, resultsXYandCLS[i][4]])
-
-                if resultsXYandCLS[i][4] in [2, 3, 4]:
-                    coins.append([x, y, w, h, resultsXYandCLS[i][4]])
-                    coinCounter += MONEY[resultsXYandCLS[i][4] - 2]
-                    if resultsXYandCLS[i][4] == 2:
-                        diamandCounter += 1
-                    if resultsXYandCLS[i][4] == 3:
-                        goldCounter += 1
-                    if resultsXYandCLS[i][4] == 4:
-                        silverCounter += 1
-
-            # 从左到右逻辑排序
-            zombies.sort(key=lambda x: x[0] - x[2] // 2)
+            # 不进行排序，直接绘制所有检测
 
             if IS_DRAW:
-                shot = clickIt(suns, window, shot, idx_to_cn, clickTimes=2)
-                shot = clickIt(coins, window, shot, idx_to_cn, clickTimes=2)
-                shot = clickIt(zombies, window, shot, idx_to_cn, clickTimes=3)
-                auto.click(window.left + 200, window.top + 200)
+                shot = drawDetections(detections, window, shot, idx_to_cn)
                 cv2.imshow("Screen", shot)
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     pass
-            else:
-                clickIt(suns, window, shot, idx_to_cn, clickTimes=2)
-                clickIt(coins, window, shot, idx_to_cn, clickTimes=2)
-                clickIt(zombies, window, shot, idx_to_cn, clickTimes=3)
-                auto.click(window.left + 200, window.top + 200)
 
             ed = time.time()
             sys.stdout.write(
-                f"\rdetect speed: {ed-bg} ms, moneyFound: {coinCounter}, diamand_count: {diamandCounter}, gold_count: {goldCounter}, silver_count: {silverCounter}"
+                f"\rdetect speed: {(ed-bg)*1000:.1f} ms, detections: {len(resultsXYandCLS)}"
                 + " " * 10
             )
             sys.stdout.flush()
