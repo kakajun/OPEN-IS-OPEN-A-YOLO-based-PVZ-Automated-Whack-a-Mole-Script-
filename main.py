@@ -37,16 +37,32 @@ def dropFakeZombie(_x, _y, _wx, _wy) -> bool:
     return _x < _wx * ZOMBIE_SIZE[0] or _y < _wy * ZOMBIE_SIZE[1]
 
 
-def clickIt(locations, _window, img, clickTimes=1, clickNum=2):
+def clickIt(locations, _window, img, label_map=None, clickTimes=1, clickNum=2):
     """点击指定位置"""
     for i in range(len(locations) if len(locations) < clickNum else clickNum):
-        x, y, w, h = locations[i]
+        # 支持 [x, y, w, h] 或 [x, y, w, h, cls_idx]
+        x, y, w, h = locations[i][:4]
+        cls_idx = locations[i][4] if len(locations[i]) > 4 else None
         for i in range(clickTimes):
             auto.click(x + _window.left, y + _window.top)
         if IS_DRAW:
             # 中心坐标转换为左上角坐标
             x, y, w, h = x - w // 2, y - h // 2, w, h
             cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            # 叠加中文标签
+            if label_map is not None and cls_idx is not None:
+                label_cn = label_map.get(cls_idx)
+                if label_cn:
+                    cv2.putText(
+                        img,
+                        label_cn,
+                        (x, max(0, y - 5)),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6,
+                        (0, 255, 0),
+                        2,
+                        cv2.LINE_AA,
+                    )
     if IS_DRAW:
         return img
     return
@@ -55,6 +71,28 @@ def clickIt(locations, _window, img, clickTimes=1, clickNum=2):
 def main():
     model = YOLO(MODEL, task="detect", verbose=False)
     classes = model.names
+    # 构建索引到中文的映射：优先使用模型自带英文名，替换为中文显示
+    # 兼容不同训练配置的英文名
+    english_to_cn = {
+        # 旧配置（金币/阳光）：
+        "zombie": "僵尸",
+        "sun": "阳光",
+        "diamond": "钻石",
+        "Coin_gold_dollar": "金币",
+        "Coin_silver_dollar": "银币",
+        # 新配置（植物类别）：
+        "Sunflower": "向日葵",
+        "Pea": "豌豆",
+        "Zombie": "僵尸",
+        "Sunshine": "阳光",
+        "Strawberry": "草莓",
+    }
+    # model.names 可能是 dict 或 list
+    if isinstance(classes, dict):
+        idx_to_name = classes
+    else:
+        idx_to_name = {i: name for i, name in enumerate(classes)}
+    idx_to_cn = {i: english_to_cn.get(name, name) for i, name in idx_to_name.items()}
     try:
         window = pygetwindow.getWindowsWithTitle(WINDOWS_TITLE)[0]
     except IndexError:
@@ -120,13 +158,13 @@ def main():
                 if resultsXYandCLS[i][4] == 0:
                     # print(f"Zombie: {w/wx} and {h/wy}")
                     if not dropFakeZombie(w, h, wx, wy):
-                        zombies.append([x, y, w, h])
+                        zombies.append([x, y, w, h, resultsXYandCLS[i][4]])
 
                 if resultsXYandCLS[i][4] == 1:
-                    suns.append([x, y, w, h])
+                    suns.append([x, y, w, h, resultsXYandCLS[i][4]])
 
                 if resultsXYandCLS[i][4] in [2, 3, 4]:
-                    coins.append([x, y, w, h])
+                    coins.append([x, y, w, h, resultsXYandCLS[i][4]])
                     coinCounter += MONEY[resultsXYandCLS[i][4] - 2]
                     if resultsXYandCLS[i][4] == 2:
                         diamandCounter += 1
@@ -139,17 +177,17 @@ def main():
             zombies.sort(key=lambda x: x[0] - x[2] // 2)
 
             if IS_DRAW:
-                shot = clickIt(suns, window, shot, clickTimes=2)
-                shot = clickIt(coins, window, shot, clickTimes=2)
-                shot = clickIt(zombies, window, shot, clickTimes=3)
+                shot = clickIt(suns, window, shot, idx_to_cn, clickTimes=2)
+                shot = clickIt(coins, window, shot, idx_to_cn, clickTimes=2)
+                shot = clickIt(zombies, window, shot, idx_to_cn, clickTimes=3)
                 auto.click(window.left + 200, window.top + 200)
                 cv2.imshow("Screen", shot)
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     pass
             else:
-                clickIt(suns, window, shot, clickTimes=2)
-                clickIt(coins, window, shot, clickTimes=2)
-                clickIt(zombies, window, shot, clickTimes=3)
+                clickIt(suns, window, shot, idx_to_cn, clickTimes=2)
+                clickIt(coins, window, shot, idx_to_cn, clickTimes=2)
+                clickIt(zombies, window, shot, idx_to_cn, clickTimes=3)
                 auto.click(window.left + 200, window.top + 200)
 
             ed = time.time()
