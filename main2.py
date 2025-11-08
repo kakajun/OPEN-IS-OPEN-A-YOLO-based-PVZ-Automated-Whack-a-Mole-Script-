@@ -13,7 +13,7 @@ import sys
 from utils import bossKeyboard
 
 ROOTPATH = os.path.dirname(os.path.abspath(__file__))  # main.py所在目录
-MODEL = os.path.join(ROOTPATH, "models", "best copy.pt")  # 模型路径
+MODEL = os.path.join(ROOTPATH, "runs", "train", "weights", "best.pt")  # 模型路径
 WINDOWS_TITLE = "植物大战僵尸中文版"  # 窗口标题
 ZOMBIE_SIZE = (0.06, 0.1)  # 僵尸的尺寸，宽度和高度占屏幕的比例
 MONEY = [10, 50, 100]  # 金币的值
@@ -41,7 +41,8 @@ def put_text_cn(img_bgr, text, xy, font, color=(0, 255, 0)):
     """在 OpenCV 图像上用中文字体绘制文本"""
     if font is None:
         # 没有中文字体时退化为英文/问号显示
-        cv2.putText(img_bgr, text, xy, cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2, cv2.LINE_AA)
+        cv2.putText(img_bgr, text, xy, cv2.FONT_HERSHEY_SIMPLEX,
+                    0.6, color, 2, cv2.LINE_AA)
         return img_bgr
     # 将 BGR 转为 RGB，使用 PIL 绘制中文，再转回 BGR
     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)

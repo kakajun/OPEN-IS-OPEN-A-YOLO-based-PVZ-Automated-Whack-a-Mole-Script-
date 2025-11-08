@@ -16,7 +16,7 @@ CLASSES = ["nomal_zombie", "sun", "diamond",
            "coin_gold_dollar", "coin_silver_dollar", "wandou", "jianguo", "dilei", "den", "xiangrikui"]
 OVERLAPTHRESHOLD = 0.4
 ISSHOW = False
-NUM_OF_DATASET = 100
+NUM_OF_DATASET = 200
 SEED = 42
 np.random.seed(SEED)
 
@@ -240,9 +240,9 @@ def buildDataset(idx):
     # 添加豌豆
     for i in range(np.random.randint(1, 5)):
         wandouAdd = wandou[np.random.randint(len(wandou))]
-        # 统一缩小 20%
+        # 缩小比例调整：在此前基础上再缩小约 30%
         w, h = wandouAdd.size
-        scale = 0.8
+        scale = 0.56
         wandouAdd = wandouAdd.resize((max(1, int(w * scale)), max(1, int(h * scale))), resample=Image.BILINEAR)
         img, addLabel = addThings(img, boxloops, wandouAdd)
         if addLabel is not None:
@@ -250,9 +250,9 @@ def buildDataset(idx):
     # 添加坚果
     for i in range(np.random.randint(1, 5)):
         jianguoAdd = jianguo[np.random.randint(len(jianguo))]
-        # 统一缩小 20%
+        # 缩小比例调整：在此前基础上再缩小约 30%
         w, h = jianguoAdd.size
-        scale = 0.8
+        scale = 0.56
         jianguoAdd = jianguoAdd.resize((max(1, int(w * scale)), max(1, int(h * scale))), resample=Image.BILINEAR)
         img, addLabel = addThings(img, boxloops, jianguoAdd)
         if addLabel is not None:
