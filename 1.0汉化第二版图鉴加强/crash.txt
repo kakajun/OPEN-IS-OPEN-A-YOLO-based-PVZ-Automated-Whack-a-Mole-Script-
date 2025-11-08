@@ -1,15 +1,15 @@
-Exception: Access Violation (code 0xc0000005) at address 509A5EE5 in thread DE8
+Exception: Access Violation (code 0xc0000005) at address 73419794 in thread 44C8
 Module: d3dim700.dll
-Logical Address: 0001:00004EE5
+Logical Address: 0001:00008794
 
-0019F858 509A5EE5 Direct3DCreateDevice+1135 [(Unknown File Name)(0)+0x00000000]
-Params: 2E6F0260 0019F86C 00000000 00000000
+73419794  0019F758  0001:00008794 d3dim700.dll
+705B216B  0019F858  0001:0000116B GDI42.dll
+0058EAD9  0019FA98  0001:0018DAD9 PlantsVsZombies.exe
 
-
-EAX:0019F86C EBX:50F50774 ECX:00000000 EDX:00336000 ESI:0019F8B0 EDI:00000000
-EIP:509A5EE5 ESP:0019F834  EBP:0019F858
+EAX:734112DC EBX:00000000 ECX:0019F788 EDX:00000001 ESI:0B6F8620 EDI:0000003C
+EIP:73419794 ESP:0019F748  EBP:0019F758
 CS:0023 SS:002B DS:002B ES:002B FS:0053 GS:002B
-Flags:00010206
+Flags:00010202
 
 Windows Ver: NT 6.2  Build 9200
 DDraw Ver: 
@@ -17,10 +17,5 @@ DSound Ver:
 
 Product: PlantsVsZombies
 Version: 1.0.0.1051
-Time Loaded: 01:51:35
-Fullscreen: ·ñ
-Primary ThreadId: DE8
-Times Played: 0
-Build Num: 0
-Build Date: 
-
+Time Loaded: 00:00:29
+Fullscreen: ÊÇ

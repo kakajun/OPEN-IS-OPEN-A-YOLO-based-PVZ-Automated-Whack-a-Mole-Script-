@@ -1,6 +1,6 @@
 """
-12/10 白天 log: 
-- 增加了金币的检测, 金币的值分为10, 50, 100三种, 分类对应2, 3, 4; 
+12/10 白天 log:
+- 增加了金币的检测, 金币的值分为10, 50, 100三种, 分类对应2, 3, 4;
 - 优化僵尸攻击逻辑: 放弃通过分类来区分攻击速度，统一攻击三次
 - 增加老板键，防止退不出程序
 - 优化信息打印逻辑
@@ -12,24 +12,30 @@
 - 优化部分逻辑，添加更多注释
 """
 
+import os
+# 避免 OpenMP 运行时重复初始化导致报错（libiomp5md.dll 重复）
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+
 from ultralytics import YOLO
+import argparse
+import torch
 import pyautogui as auto
 import pygetwindow
 import numpy as np
 import time
-import os
 from PIL import ImageGrab
 import cv2
 import sys
 from utils import bossKeyboard
 
 ROOTPATH = os.path.dirname(os.path.abspath(__file__))  # main.py所在目录
-MODEL = os.path.join(ROOTPATH, "models", "1zombie_yolo11n.pt")  # 模型路径
+MODEL = os.path.join(ROOTPATH, "models", "best.pt")  # 模型路径
 WINDOWS_TITLE = "植物大战僵尸中文版"  # 窗口标题
 ZOMBIE_SIZE = (0.06, 0.1)  # 僵尸的尺寸，宽度和高度占屏幕的比例
 MONEY = [10, 50, 100]  # 金币的值
 PROGRAM_RUNNING_FLAG = bossKeyboard.bossKeyboard(["q"])  # 全局变量，控制主程序的状态
-IS_DRAW = True  # 是否绘画矩形框和展示图像
+IS_DRAW = True  # 是否绘画矩形框和展示图像（可通过命令行关闭）
 
 
 def dropFakeZombie(_x, _y, _wx, _wy) -> bool:
@@ -52,7 +58,7 @@ def clickIt(locations, _window, img, clickTimes=1, clickNum=2):
     return
 
 
-def main():
+def main(device: str):
     model = YOLO(MODEL, task="detect", verbose=False)
     classes = model.names
     try:
@@ -67,7 +73,7 @@ def main():
     #     return
 
     print(
-        f"Root path: {ROOTPATH}, Model path: {MODEL}, Classes: {classes}, Windows title: {WINDOWS_TITLE}"
+        f"Root path: {ROOTPATH}, Model path: {MODEL}, Classes: {classes}, Windows title: {WINDOWS_TITLE}, Device: {device}"
     )
     coinCounter = 0
     diamandCounter = 0
@@ -95,7 +101,7 @@ def main():
 
             shotDet = cv2.resize(shot, (640, 640))
 
-            results = model(shotDet, task="detect", conf=0.8, verbose=False)[0]
+            results = model(shotDet, task="detect", conf=0.8, device=device, verbose=False)[0]
 
             # resultsXY格式，二维数组：[[x,y,w,h],[x,y,w,h],...]
             # resultsCLS格式，一维数组：[0,1,0,1,...]
@@ -164,7 +170,32 @@ def main():
     cv2.destroyAllWindows()
 
 
-# 启动键盘监听器线程
-PROGRAM_RUNNING_FLAG.startListen()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="PVZ 自动打地鼠脚本")
+    parser.add_argument(
+        "--device",
+        choices=["auto", "cpu", "cuda"],
+        default="auto",
+        help="推理设备：auto（默认），cpu 或 cuda",
+    )
+    parser.add_argument(
+        "--no-draw",
+        action="store_true",
+        help="禁用绘制矩形与图像显示（更快）",
+    )
+    args = parser.parse_args()
 
-main()
+    # 设备解析
+    if args.device == "auto":
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+    else:
+        device = args.device
+
+    # 绘制开关
+    IS_DRAW = not args.no_draw
+
+    # 启动键盘监听器线程
+    PROGRAM_RUNNING_FLAG.startListen()
+
+    # 运行主程序
+    main(device)

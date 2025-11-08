@@ -16,7 +16,7 @@ SOURCEIMG = os.path.join(ROOTPATH, "ZVPImgs")
 CLASSES = ["nomal_zombie", "sun", "diamond", "coin_gold_dollar", "coin_silver_dollar"]
 OVERLAPTHRESHOLD = 0.4
 ISSHOW = False
-NUM_OF_DATASET = 10
+NUM_OF_DATASET = 100
 SEED = 42
 np.random.seed(SEED)
 

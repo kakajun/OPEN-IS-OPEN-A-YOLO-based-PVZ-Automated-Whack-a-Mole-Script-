@@ -2,9 +2,9 @@ task: train
 mode: train
 model: null
 data: null
-epochs: 300
+epochs: 100
 time: null
-patience: 100
+patience: 50
 batch: 16
 imgsz: 960
 save: true
