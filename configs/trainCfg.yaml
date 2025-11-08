@@ -8,13 +8,13 @@ patience: 50
 batch: 16
 imgsz: 960
 save: true
-save_period: -1
+save_period: 10
 cache: false
 device: null
 workers: 8
-project: null
+project: runs
 name: null
-exist_ok: false
+exist_ok: true
 pretrained: true
 optimizer: auto
 verbose: true
