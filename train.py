@@ -11,45 +11,29 @@ ROOTPATH = os.path.dirname(os.path.abspath(__file__))
 model = YOLO("yolo11s.yaml")
 
 def run(device: str):
-    # 如果用户指定了 CUDA，但当前环境不可用，则直接回退到 CPU
-    if device == "cuda" and not torch.cuda.is_available():
-        print("[train] 检测到 CUDA 不可用，自动回退到 CPU 训练。")
-        device = "cpu"
-    try:
-        print(f"[train] using device: {device}")
-        model.train(
-            data=os.path.join(ROOTPATH, "configs", "ZVP.yaml"),
-            cfg=os.path.join(ROOTPATH, "configs", "trainCfg.yaml"),
-            device=device,
-        )
-    except (RuntimeError, ValueError) as e:
-        msg = str(e)
-        if (
-            "no kernel image is available for execution on the device" in msg
-            or "CUDA error" in msg
-            or "Invalid CUDA" in msg
-        ):
-            print("[train] CUDA 不兼容或不可用，自动回退到 CPU 训练。")
-            model.train(
-                data=os.path.join(ROOTPATH, "configs", "ZVP.yaml"),
-                cfg=os.path.join(ROOTPATH, "configs", "trainCfg.yaml"),
-                device="cpu",
-            )
-        else:
-            raise
+    # 仅支持 CUDA；如果不可用则直接报错，不再尝试 CPU。
+    if device in ("cuda", "0", "cuda:0") and not torch.cuda.is_available():
+        raise RuntimeError("[train] CUDA 不可用或不兼容，已拒绝回退到 CPU。请安装匹配的 CUDA/Torch。")
+
+    # 强制使用 CUDA
+    device = "cuda"
+    print(f"[train] using device: {device}")
+    model.train(
+        data=os.path.join(ROOTPATH, "configs", "ZVP.yaml"),
+        cfg=os.path.join(ROOTPATH, "configs", "trainCfg.yaml"),
+        device=device,
+    )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train YOLO model for PVZ dataset")
     parser.add_argument(
         "--device",
-        choices=["auto", "cpu", "cuda"],
+        choices=["auto", "cuda"],
         default="auto",
-        help="Training device: auto (default), cpu or cuda",
+        help="Training device: auto (default) or cuda",
     )
     args = parser.parse_args()
-
-    dev = "cuda" if (args.device == "auto" and torch.cuda.is_available()) else (
-        args.device if args.device != "auto" else "cpu"
-    )
+    # 始终使用 CUDA；若不可用，run() 会报错。
+    dev = "cuda"
     run(dev)
