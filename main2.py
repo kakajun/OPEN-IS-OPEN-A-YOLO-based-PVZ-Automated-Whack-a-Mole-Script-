@@ -20,6 +20,21 @@ MONEY = [10, 50, 100]  # 金币的值
 PROGRAM_RUNNING_FLAG = bossKeyboard.bossKeyboard(["q"])  # 全局变量，控制主程序的状态
 IS_DRAW = True  # 是否绘画矩形框和展示图像
 
+# 每个类别的专属颜色（BGR），索引与模型 classes 对齐
+# 0: 僵尸, 1: 阳光, 2: 钻石, 3: 金币, 4: 银币, 5: 豌豆, 6: 坚果, 7: 地雷, 8: 灯笼, 9: 向日葵
+CLASS_COLORS = {
+    0: (0, 0, 255),      # 僵尸：红色
+    1: (0, 255, 255),    # 阳光：黄色
+    2: (255, 255, 0),    # 钻石：青色
+    3: (0, 165, 255),    # 金币：橙色
+    4: (160, 160, 160),  # 银币：灰色
+    5: (0, 255, 0),      # 豌豆：绿色
+    6: (19, 69, 139),    # 坚果：棕色系
+    7: (255, 0, 255),    # 地雷：洋红/紫色
+    8: (255, 0, 0),      # 灯笼：蓝色（BGR）
+    9: (255, 0, 127),    # 向日葵：粉色
+}
+
 
 def load_cn_font(font_size=20):
     """尝试加载系统中文字体，避免中文显示为问号"""
@@ -61,23 +76,28 @@ def dropFakeZombie(_x, _y, _wx, _wy) -> bool:
 def clickIt(locations, _window, img, label_map=None, clickTimes=1, clickNum=2, font_cn=None):
     """在指定位置绘制标注（不进行任何点击操作，全部标注）"""
     for i in range(len(locations)):
-        # 支持 [x, y, w, h] 或 [x, y, w, h, cls_idx]
+        # 支持 [x, y, w, h], [x, y, w, h, cls_idx], [x, y, w, h, cls_idx, conf]
         x, y, w, h = locations[i][:4]
         cls_idx = locations[i][4] if len(locations[i]) > 4 else None
+        conf_val = locations[i][5] if len(locations[i]) > 5 else None
         if IS_DRAW:
             # 中心坐标转换为左上角坐标
             x, y, w, h = x - w // 2, y - h // 2, w, h
-            cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            # 叠加中文标签
+            color = CLASS_COLORS.get(cls_idx, (0, 255, 0))
+            cv2.rectangle(img, (x, y), (x + w, y + h), color, 2)
+            # 叠加中文标签（附加识别率）
             if label_map is not None and cls_idx is not None:
                 label_cn = label_map.get(cls_idx, "？？？？？？")
                 if label_cn:
+                    # 在名字后面追加识别率百分比（如 85%）
+                    if conf_val is not None:
+                        label_cn = f"{label_cn} {int(conf_val * 100)}%"
                     img = put_text_cn(
                         img,
                         label_cn,
                         (x, max(0, y - 20)),  # PIL 字体基线不同，稍微上移
                         font_cn,
-                        (0, 255, 0),
+                        color,
                     )
     if IS_DRAW:
         return img
@@ -90,22 +110,22 @@ def main():
     # 加载中文字体，避免 cv2.putText 将中文显示为问号
     font_cn = load_cn_font(22)
     # 构建索引到中文的映射：优先使用模型自带英文名，替换为中文显示
+    # CLASSES = ["nomal_zombie", "sun", "diamond",
+#            "coin_gold_dollar", "coin_silver_dollar", "wandou", "jianguo", "dilei", "den", "xiangrikui"]
+
     # 兼容不同训练配置的英文名
     english_to_cn = {
-        # ZVP.yaml 当前配置（5类）：
+        # ZVP.yaml 当前配置（10类）：
         "nomal_zombie": "僵尸",
         "sun": "阳光",
         "diamond": "钻石",
-        "qcoin_gold_dollar": "金币",
+        "coin_gold_dollar": "金币",
         "coin_silver_dollar": "银币",
-        # 兼容旧命名/大小写变体：
-        "zombie": "僵尸",
-        "Zombie": "僵尸",
-        "Sun": "阳光",
-        "Sunshine": "阳光",
-        "Diamond": "钻石",
-        "Coin_gold_dollar": "金币",
-        "Coin_silver_dollar": "银币",
+        "wandou": "豌豆",
+        "jianguo": "坚果",
+        "dilei": "地雷",
+        "den": "灯笼",
+        "xiangrikui": "向日葵",
     }
     # model.names 可能是 dict 或 list
     if isinstance(classes, dict):
@@ -150,50 +170,61 @@ def main():
 
             shotDet = cv2.resize(shot, (640, 640))
 
-            results = model(shotDet, task="detect", conf=0.8, verbose=False)[0]
+            # 按你的要求提高阈值至 0.8
+            results = model(shotDet, task="detect", conf=0.9, verbose=False)[0]
 
             # resultsXY格式，二维数组：[[x,y,w,h],[x,y,w,h],...]
             # resultsCLS格式，一维数组：[0,1,0,1,...]
             # 每个标签的坐标和种类索引一一对应
-            resultsXYandCLS = results.boxes.xywh.cpu().numpy()  # 所有标签的坐标
+            resultsXY = results.boxes.xywh.cpu().numpy()  # 所有标签的坐标
             resultsCLS = results.boxes.cls.cpu().numpy()  # 所有标签的种类索引
-            # 更新数组
+            resultsCONF = results.boxes.conf.cpu().numpy()  # 所有标签的置信度
+            # 将坐标、类别、置信度合并
             resultsXYandCLS = [
-                [*[int(j) for j in resultsXYandCLS[i]], int(resultsCLS[i])]
-                for i in range(len(resultsXYandCLS))
+                [
+                    int(resultsXY[i][0]),
+                    int(resultsXY[i][1]),
+                    int(resultsXY[i][2]),
+                    int(resultsXY[i][3]),
+                    int(resultsCLS[i]),
+                    float(resultsCONF[i]),
+                ]
+                for i in range(len(resultsXY))
             ]
             # print(resultsXYandCLS)
-            zombies = []
-            coins = []
-            suns = []
+            # 统一收集所有类别，避免只显示部分类别导致漏标
+            allDetections = []
 
             for i in range(len(resultsXYandCLS)):
                 x, y, w, h = resultsXYandCLS[i][:4]
 
                 # 分辨率转换
                 x, y, w, h = x * wx // 640, y * wy // 640, w * wx // 640, h * wy // 640
-                if resultsXYandCLS[i][4] == 0:
-                    # print(f"Zombie: {w/wx} and {h/wy}")
+                cls_idx = resultsXYandCLS[i][4]
+                conf_val = resultsXYandCLS[i][5] if len(
+                    resultsXYandCLS[i]) > 5 else None
+                if cls_idx == 0:
+                    # 僵尸做一次尺寸过滤，避免误检
                     if not dropFakeZombie(w, h, wx, wy):
-                        zombies.append([x, y, w, h, resultsXYandCLS[i][4]])
+                        allDetections.append([x, y, w, h, cls_idx, conf_val])
+                else:
+                    allDetections.append([x, y, w, h, cls_idx, conf_val])
 
-                if resultsXYandCLS[i][4] == 1:
-                    suns.append([x, y, w, h, resultsXYandCLS[i][4]])
-
-                if resultsXYandCLS[i][4] in [2, 3, 4]:
-                    coins.append([x, y, w, h, resultsXYandCLS[i][4]])
-                    coinCounter += MONEY[resultsXYandCLS[i][4] - 2]
-                    if resultsXYandCLS[i][4] == 2:
+                if cls_idx in [2, 3, 4]:
+                    # 统计金币/钻石计数（不影响标注）
+                    coins_value_idx = cls_idx - 2
+                    if 0 <= coins_value_idx < len(MONEY):
+                        coinCounter += MONEY[coins_value_idx]
+                    if cls_idx == 2:
                         diamandCounter += 1
-                    if resultsXYandCLS[i][4] == 3:
+                    if cls_idx == 3:
                         goldCounter += 1
-                    if resultsXYandCLS[i][4] == 4:
+                    if cls_idx == 4:
                         silverCounter += 1
 
-            # 直接标注所有检测结果，不进行排序
-            shot = clickIt(suns, window, shot, idx_to_cn, font_cn=font_cn)
-            shot = clickIt(coins, window, shot, idx_to_cn, font_cn=font_cn)
-            shot = clickIt(zombies, window, shot, idx_to_cn, font_cn=font_cn)
+            # 直接标注所有检测结果（包含向日葵等所有类别）
+            shot = clickIt(allDetections, window, shot,
+                           idx_to_cn, font_cn=font_cn)
             cv2.imshow("Screen", shot)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 pass
