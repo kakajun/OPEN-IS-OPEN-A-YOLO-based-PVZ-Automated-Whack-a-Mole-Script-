@@ -1,20 +1,24 @@
 # Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
-path: datasets # dataset root dir（与你当前 datasets 结构一致）
+# NOTE: 与 buildDatasets.py 中的 CLASSES 顺序保持一致
+# CLASSES = ["nomal_zombie", "sun", "diamond", "coin_gold_dollar", "coin_silver_dollar", "wandou", "jianguo", "dilei", "den", "xiangrikui"]
+# 请确保数据生成或类别调整后同步更新此映射
+path: datasets/ZVP # dataset root dir
 train: images/train # train images (relative to 'path') 4 images
 val: images/val # val images (relative to 'path') 4 images
 # test:  # test images (optional)
-# Classes (80 COCO classes)
+# CLASSES = ["nomal_zombie", "sun", "diamond",
+#            "coin_gold_dollar", "coin_silver_dollar", "wandou", "jianguo", "dilei", "den", "xiangrikui"]
+
+nc: 10
+
 names:
-  0: Sunflower
-  1: Pea
-  2: Zombie
-  3: Sunshine
-  4: Strawberry
-  ## past classes
-  # 0: nomal_zombie
-  # 1: conehead_zombie
-  # 2: buckethead_zombie
-  # 3: Sun
-  # 4: Diamond
-  # 5: Coin_gold_dollar
-  # 6: Coin_silver_dollar
+  0: nomal_zombie
+  1: sun
+  2: diamond
+  3: coin_gold_dollar
+  4: coin_silver_dollar
+  5: wandou
+  6: jianguo
+  7: dilei
+  8: den
+  9: xiangrikui

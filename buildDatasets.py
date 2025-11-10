@@ -1,22 +1,22 @@
 # 计时器
+import numpy as np
+from PIL import Image, ImageDraw
+import shutil
+import os
 import time
 
 bgt = time.time()
-
-import os
-import shutil
-from PIL import Image, ImageDraw
-import numpy as np
 
 
 # 创建输出文件夹
 ROOTPATH = os.path.dirname(os.path.abspath(__file__))
 OUTPUT = os.path.join(ROOTPATH, "datasets", "ZVP")
 SOURCEIMG = os.path.join(ROOTPATH, "ZVPImgs")
-CLASSES = ["nomal_zombie", "sun", "diamond", "coin_gold_dollar", "coin_silver_dollar"]
+CLASSES = ["nomal_zombie", "sun", "diamond",
+           "coin_gold_dollar", "coin_silver_dollar", "wandou", "jianguo", "dilei", "den", "xiangrikui"]
 OVERLAPTHRESHOLD = 0.4
 ISSHOW = False
-NUM_OF_DATASET = 10
+NUM_OF_DATASET = 200
 SEED = 42
 np.random.seed(SEED)
 
@@ -52,6 +52,56 @@ while True:
     try:
         gif.seek(gif.tell() + 1)
         sun.append(gif.copy())
+    except EOFError:
+        break
+
+gif = Image.open(os.path.join(SOURCEIMG, "wandou.gif"))
+wandou = []
+# 读取所有帧
+while True:
+    try:
+        gif.seek(gif.tell() + 1)
+        wandou.append(gif.copy())
+    except EOFError:
+        break
+
+gif = Image.open(os.path.join(SOURCEIMG, "jianguo.gif"))
+jianguo = []
+# 读取所有帧
+while True:
+    try:
+        gif.seek(gif.tell() + 1)
+        jianguo.append(gif.copy())
+    except EOFError:
+        break
+
+gif = Image.open(os.path.join(SOURCEIMG, "dilei.gif"))
+dilei = []
+# 读取所有帧
+while True:
+    try:
+        gif.seek(gif.tell() + 1)
+        dilei.append(gif.copy())
+    except EOFError:
+        break
+
+gif = Image.open(os.path.join(SOURCEIMG, "den.gif"))
+den = []
+# 读取所有帧
+while True:
+    try:
+        gif.seek(gif.tell() + 1)
+        den.append(gif.copy())
+    except EOFError:
+        break
+
+gif = Image.open(os.path.join(SOURCEIMG, "xiangrikui.gif"))
+xiangrikui = []
+# 读取所有帧
+while True:
+    try:
+        gif.seek(gif.tell() + 1)
+        xiangrikui.append(gif.copy())
     except EOFError:
         break
 
@@ -97,9 +147,9 @@ def drawRectangle(img, boxes: list):
     return img
 
 
-def addThings(img, imgloop, thing, isScale=False, isScaleX=False):
-    Bx, By = img.size # 背景的宽和高
-    W, H = thing.size # 物体的宽和高
+def addThings(img, imgloop, thing, isScale=False, isScaleX=False, max_attempts=200):
+    Bx, By = img.size  # 背景的宽和高
+    W, H = thing.size  # 物体的宽和高
 
     # 正比例缩放
     if isScale:
@@ -113,20 +163,27 @@ def addThings(img, imgloop, thing, isScale=False, isScaleX=False):
         W = int(W * scale)
         thing = thing.resize((W, H))
 
-    # 检测是否重叠并且添加
+    # 检测是否重叠并且添加（限制尝试次数，避免死循环）
     # print(f"Bx: {Bx}, By: {By}, W: {W}, H: {H}")
-    while True:
+    placed = False
+    x = y = 0
+    for _ in range(max_attempts):
         x, y = np.random.randint(Bx - W), np.random.randint(By - H)
         if not detectOverlap(imgloop, (x, y, W, H)):
             img.paste(thing, (x, y), thing)
             imgloop.append([x, y, W, H])
+            placed = True
             break
 
-    if ISSHOW:
+    if placed and ISSHOW:
         img = drawRectangle(img, [x, y, W, H])
         # 画出x,y位置
         draw = ImageDraw.Draw(img)
         draw.point((x + W // 2, y + H // 2), fill="red")
+
+    if not placed:
+        # 放弃该物体的添加，返回 None 标签以便调用方跳过
+        return img, None
 
     return img, [(x + W // 2) / Bx, (y + H // 2) / By, W / Bx, H / By]
 
@@ -152,30 +209,76 @@ def buildDataset(idx):
         zombieAdd = zombies[np.random.randint(len(zombies))]
         zombieAdd = zombieAdd[np.random.randint(len(zombieAdd))]
         img, addLabel = addThings(img, boxloops, zombieAdd)
-        imgLabel += "0 " + " ".join([str(i) for i in addLabel]) + "\n"
+        if addLabel is not None:
+            imgLabel += "0 " + " ".join([str(i) for i in addLabel]) + "\n"
 
     # 添加阳光，并且适当缩放
     for i in range(np.random.randint(1, 5)):
         sunAdd = sun[np.random.randint(len(sun))]
         img, addLabel = addThings(img, boxloops, sunAdd, True)
-        imgLabel += "1 " + " ".join([str(i) for i in addLabel]) + "\n"
+        if addLabel is not None:
+            imgLabel += "1 " + " ".join([str(i) for i in addLabel]) + "\n"
 
     # 添加钻石
     for i in range(np.random.randint(1, 5)):
         img, addLabel = addThings(img, boxloops, diamond)
-        imgLabel += "2 " + " ".join([str(i) for i in addLabel]) + "\n"
+        if addLabel is not None:
+            imgLabel += "2 " + " ".join([str(i) for i in addLabel]) + "\n"
 
     # 添加金币
     for i in range(np.random.randint(1, 5)):
         img, addLabel = addThings(img, boxloops, goldCoin, isScaleX=True)
-        imgLabel += "3 " + " ".join([str(i) for i in addLabel]) + "\n"
+        if addLabel is not None:
+            imgLabel += "3 " + " ".join([str(i) for i in addLabel]) + "\n"
 
     # 添加银币
     for i in range(np.random.randint(1, 5)):
         img, addLabel = addThings(img, boxloops, silverCoin, isScaleX=True)
-        imgLabel += "4 " + " ".join([str(i) for i in addLabel]) + "\n"
+        if addLabel is not None:
+            imgLabel += "4 " + " ".join([str(i) for i in addLabel]) + "\n"
 
-    ## 展示图片
+    # 添加豌豆
+    for i in range(np.random.randint(1, 5)):
+        wandouAdd = wandou[np.random.randint(len(wandou))]
+        # 缩小比例调整：在此前基础上再缩小约 30%
+        w, h = wandouAdd.size
+        scale = 0.56
+        wandouAdd = wandouAdd.resize((max(1, int(w * scale)), max(1, int(h * scale))), resample=Image.BILINEAR)
+        img, addLabel = addThings(img, boxloops, wandouAdd)
+        if addLabel is not None:
+            imgLabel += "5 " + " ".join([str(i) for i in addLabel]) + "\n"
+    # 添加坚果
+    for i in range(np.random.randint(1, 5)):
+        jianguoAdd = jianguo[np.random.randint(len(jianguo))]
+        # 缩小比例调整：在此前基础上再缩小约 30%
+        w, h = jianguoAdd.size
+        scale = 0.56
+        jianguoAdd = jianguoAdd.resize((max(1, int(w * scale)), max(1, int(h * scale))), resample=Image.BILINEAR)
+        img, addLabel = addThings(img, boxloops, jianguoAdd)
+        if addLabel is not None:
+            imgLabel += "6 " + " ".join([str(i) for i in addLabel]) + "\n"
+
+    # 添加地雷
+    for i in range(np.random.randint(1, 5)):
+        dileiAdd = dilei[np.random.randint(len(dilei))]
+        img, addLabel = addThings(img, boxloops, dileiAdd)
+        if addLabel is not None:
+            imgLabel += "7 " + " ".join([str(i) for i in addLabel]) + "\n"
+
+    # 添加灯
+    for i in range(np.random.randint(1, 5)):
+        denAdd = den[np.random.randint(len(den))]
+        img, addLabel = addThings(img, boxloops, denAdd)
+        if addLabel is not None:
+            imgLabel += "8 " + " ".join([str(i) for i in addLabel]) + "\n"
+    # 添加向日葵
+    for i in range(np.random.randint(1, 5)):
+        xiangrikuiAdd = xiangrikui[np.random.randint(len(xiangrikui))]
+        img, addLabel = addThings(img, boxloops, xiangrikuiAdd)
+        if addLabel is not None:
+            imgLabel += "9 " + " ".join([str(i) for i in addLabel]) + "\n"
+
+    # 展示图片
     # img.show()
     # print(imgLabel)
     # input()
@@ -202,11 +305,12 @@ imgList = os.listdir(OUTPUT)
 imgList = [img for img in imgList if img.endswith(".jpg")]
 np.random.shuffle(imgList)
 trainList = imgList[: int(len(imgList) * 0.75)]
-valList = imgList[int(len(imgList) * 0.75) :]
+valList = imgList[int(len(imgList) * 0.75):]
 
 for i in trainList:
     shutil.move(
-        os.path.join(OUTPUT, f"{i}"), os.path.join(OUTPUT, "images", "train", f"{i}")
+        os.path.join(OUTPUT, f"{i}"), os.path.join(
+            OUTPUT, "images", "train", f"{i}")
     )
     shutil.move(
         os.path.join(OUTPUT, f"{i[:-4]}.txt"),
@@ -214,7 +318,8 @@ for i in trainList:
     )
 for i in valList:
     shutil.move(
-        os.path.join(OUTPUT, f"{i}"), os.path.join(OUTPUT, "images", "val", f"{i}")
+        os.path.join(OUTPUT, f"{i}"), os.path.join(
+            OUTPUT, "images", "val", f"{i}")
     )
     shutil.move(
         os.path.join(OUTPUT, f"{i[:-4]}.txt"),

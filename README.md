@@ -57,8 +57,29 @@
    使用以下命令运行项目主文件：
 
    ```shell
-   python main.py # 运行主程序
-   python buildDatasets.py # 运行生成数据集的脚本
+   # 运行主程序（默认自动选择设备：优先CUDA，其次CPU）
+   python main.py
+
+   # 指定设备：cpu / cuda / auto
+   python main.py --device cpu
+   python main.py --device cuda
+
+   # 关闭绘制功能（仅保留点击逻辑）
+   python main.py --no-draw
+
+   # 生成数据集
+   python buildDatasets.py
+   ```
+
+   训练模型时也可选择设备：
+
+   ```shell
+   # 默认自动选择设备
+   python train.py
+
+   # 指定设备
+   python train.py --device cuda
+   python train.py --device cpu
    ```
 
 ## 技术调查说明
